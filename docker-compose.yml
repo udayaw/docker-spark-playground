@@ -19,12 +19,12 @@ version: "3"
 
 services:
   spark-iceberg:
-    image: tabulario/spark-iceberg
-    container_name: spark-iceberg
+    image: udayaw/spark
+    container_name: spark
     build: spark/
     depends_on:
-      - rest
       - minio
+      - metastore
     volumes:
       - ./warehouse:/home/iceberg/warehouse
       - ./notebooks:/home/iceberg/notebooks/notebooks
@@ -38,22 +38,12 @@ services:
       - 10000:10000
       - 10001:10001
     links:
-      - rest:rest
       - minio:minio
-  rest:
-    image: tabulario/iceberg-rest:0.2.0
-    ports:
-      - 8181:8181
-    environment:
-      - AWS_ACCESS_KEY_ID=admin
-      - AWS_SECRET_ACCESS_KEY=password
-      - AWS_REGION=us-east-1
-      - CATALOG_WAREHOUSE=s3a://warehouse/wh/
-      - CATALOG_IO__IMPL=org.apache.iceberg.aws.s3.S3FileIO
-      - CATALOG_S3_ENDPOINT=http://minio:9000
   minio:
     image: minio/minio
     container_name: minio
+    volumes:
+      - ./minio-storage:/data
     environment:
       - MINIO_ROOT_USER=admin
       - MINIO_ROOT_PASSWORD=password
@@ -73,8 +63,18 @@ services:
     entrypoint: >
       /bin/sh -c "
       until (/usr/bin/mc config host add minio http://minio:9000 admin password) do echo '...waiting...' && sleep 1; done;
-      /usr/bin/mc rm -r --force minio/warehouse;
-      /usr/bin/mc mb minio/warehouse;
-      /usr/bin/mc policy set public minio/warehouse;
+      /usr/bin/mc mb --ignore-existing minio/warehouse;
+      /usr/bin/mc anonymous set public minio/warehouse;
       tail -f /dev/null
       "
+  metastore:
+    image: udayaw/hive-metastore
+    container_name: hive-meta
+    build: postgres/
+    volumes:
+      - ./metastore-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: admin
+      POSTGRES_USER: admin
+    ports:
+      - 5432:5432
