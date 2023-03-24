@@ -44,7 +44,10 @@ docker exec -it spark-iceberg spark-sql
 docker exec -it spark-iceberg pyspark
 ```
 
+The dellta lake support is enabled in spark default catalog `spark_default` while iceberg uses `iceberg` catalog.
+
 To stop everything, just run `docker-compose down`. The data directories for metastore and the MinIO are mounted locally and changes will be persisted even after the shutdown.
+
 
 ## Cleanup
 
