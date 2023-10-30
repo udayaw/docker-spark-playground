@@ -32,6 +32,8 @@ services:
       - AWS_ACCESS_KEY_ID=admin
       - AWS_SECRET_ACCESS_KEY=password
       - AWS_REGION=us-east-1
+    networks:
+      iceberg_net:
     ports:
       - 8888:8888
       - 8080:8080
@@ -47,6 +49,11 @@ services:
     environment:
       - MINIO_ROOT_USER=admin
       - MINIO_ROOT_PASSWORD=password
+      - MINIO_DOMAIN=minio
+    networks:
+      iceberg_net:
+        aliases:
+          - warehouse.minio #https://github.com/tabular-io/docker-spark-iceberg/pull/72
     ports:
       - 9001:9001
       - 9000:9000
@@ -56,6 +63,8 @@ services:
       - minio
     image: minio/mc
     container_name: mc
+    networks:
+      iceberg_net:
     environment:
       - AWS_ACCESS_KEY_ID=admin
       - AWS_SECRET_ACCESS_KEY=password
@@ -70,6 +79,8 @@ services:
   metastore:
     image: udayaw/hive-metastore
     container_name: hive-meta
+    networks:
+      iceberg_net:
     build: postgres/
     volumes:
       - ./metastore-data:/var/lib/postgresql/data
@@ -78,3 +89,5 @@ services:
       POSTGRES_USER: admin
     ports:
       - 5432:5432
+networks:
+  iceberg_net:

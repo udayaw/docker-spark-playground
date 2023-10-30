@@ -17,7 +17,7 @@
  under the License.
 -->
 
-# Spark + Iceberg + Delta Lake + Jupyter Notebook (Python, Scala)
+# Spark 3.5.0 + Iceberg 1.4.1 + Delta Lake 3.0.0 + Jupyter Notebook (Python, Scala)
 
 This is a docker compose environment to quickly get up and running with a Spark environment and a external hive catalog using Postgre
 , and MinIO as a storage backend.
@@ -32,6 +32,8 @@ docker-compose up
 ```
 
 The notebook server will then be available at http://localhost:8888
+
+Minio will be available at http://localhost:9001/browser
 
 While the notebook server is running, you can use any of the following commands if you prefer to use spark-shell, spark-sql, or pyspark.
 ```

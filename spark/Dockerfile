@@ -47,12 +47,16 @@ RUN curl https://github.com/SpencerPark/IJava/releases/download/v1.3.0/ijava-1.3
 # Optional env variables
 ENV SPARK_HOME=${SPARK_HOME:-"/opt/spark"}
 ENV HADOOP_HOME=${HADOOP_HOME:-"/opt/hadoop"}
-ENV PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-0.10.9.5-src.zip:$PYTHONPATH
+ENV PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-0.10.9.7-src.zip:$PYTHONPATH
 
 RUN mkdir -p ${HADOOP_HOME} && mkdir -p ${SPARK_HOME}
 WORKDIR ${SPARK_HOME}
 
-ENV SPARK_VERSION=3.3.2
+ENV SCALA_VERSION=2.12
+ENV SPARK_VERSION=3.5.0
+ENV SPARK_MAJOR_VERSION=3.5
+ENV ICEBERG_VERSION=1.4.1
+ENV DELTA_LAKE_VERSION=3.0.0
 
 # Download spark
 RUN curl https://dlcdn.apache.org/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop3.tgz -o spark-${SPARK_VERSION}-bin-hadoop3.tgz \
@@ -60,17 +64,17 @@ RUN curl https://dlcdn.apache.org/spark/spark-${SPARK_VERSION}/spark-${SPARK_VER
  && rm -rf spark-${SPARK_VERSION}-bin-hadoop3.tgz
 
 # Download iceberg spark runtime
-RUN curl https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-3.3_2.12/1.1.0/iceberg-spark-runtime-3.3_2.12-1.1.0.jar -Lo /opt/spark/jars/iceberg-spark-runtime-3.3_2.12-1.1.0.jar
+RUN curl https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-${SPARK_MAJOR_VERSION}_${SCALA_VERSION}/${ICEBERG_VERSION}/iceberg-spark-runtime-${SPARK_MAJOR_VERSION}_${SCALA_VERSION}-${ICEBERG_VERSION}.jar -Lo /opt/spark/jars/iceberg-spark-runtime-${SPARK_MAJOR_VERSION}_${SCALA_VERSION}-${ICEBERG_VERSION}.jar
 
-ENV TABULAR_VERSION=0.50.4
+# Download AWS bundle
+RUN curl -s https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-aws-bundle/${ICEBERG_VERSION}/iceberg-aws-bundle-${ICEBERG_VERSION}.jar -Lo /opt/spark/jars/iceberg-aws-bundle-${ICEBERG_VERSION}.jar
 
-RUN curl https://tabular-repository-public.s3.amazonaws.com/releases/io/tabular/tabular-client-runtime/${TABULAR_VERSION}/tabular-client-runtime-${TABULAR_VERSION}.jar -Lo /opt/spark/jars/tabular-client-runtime.jar
 
-# Download Java AWS SDK
-RUN curl https://repo1.maven.org/maven2/software/amazon/awssdk/bundle/2.17.257/bundle-2.17.257.jar -Lo /opt/spark/jars/bundle-2.17.257.jar
-
-# Download URL connection client required for S3FileIO
-RUN curl https://repo1.maven.org/maven2/software/amazon/awssdk/url-connection-client/2.17.257/url-connection-client-2.17.257.jar -Lo /opt/spark/jars/url-connection-client-2.17.257.jar
+## Download Java AWS SDK
+#RUN curl https://repo1.maven.org/maven2/software/amazon/awssdk/bundle/2.17.257/bundle-2.17.257.jar -Lo /opt/spark/jars/bundle-2.17.257.jar
+#
+## Download URL connection client required for S3FileIO
+#RUN curl https://repo1.maven.org/maven2/software/amazon/awssdk/url-connection-client/2.17.257/url-connection-client-2.17.257.jar -Lo /opt/spark/jars/url-connection-client-2.17.257.jar
 
 # Install AWS CLI
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
@@ -103,11 +107,11 @@ COPY notebooks/ /home/iceberg/notebooks
 
 
 # delta lake configs
-RUN curl https://repo1.maven.org/maven2/io/delta/delta-core_2.12/2.2.0/delta-core_2.12-2.2.0.jar -Lo /opt/spark/jars/delta-core_2.12-2.2.0.jar \
+RUN curl https://repo1.maven.org/maven2/io/delta/delta-spark_${SCALA_VERSION}/${DELTA_LAKE_VERSION}/delta-spark_${SCALA_VERSION}-${DELTA_LAKE_VERSION}.jar -Lo /opt/spark/jars/delta-spark_${SCALA_VERSION}-${DELTA_LAKE_VERSION}.jar \
+ && curl https://repo1.maven.org/maven2/io/delta/delta-storage/${DELTA_LAKE_VERSION}/delta-storage-${DELTA_LAKE_VERSION}.jar -Lo /opt/spark/jars/delta-storage-${DELTA_LAKE_VERSION}.jar \
  && curl https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.2/hadoop-aws-3.3.2.jar -Lo /opt/spark/jars/hadoop-aws-3.3.2.jar \
 # delta requires AWS Java SDK 1 for s3://
  && curl https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.429/aws-java-sdk-bundle-1.12.429.jar -Lo /opt/spark/jars/aws-java-sdk-bundle-1.12.429.jar \
- && curl https://repo1.maven.org/maven2/io/delta/delta-storage/2.2.0/delta-storage-2.2.0.jar -Lo /opt/spark/jars/delta-storage-2.2.0.jar \
  && curl https://repo1.maven.org/maven2/org/postgresql/postgresql/42.4.3/postgresql-42.4.3.jar -Lo /opt/spark/jars/postgresql-42.4.3.jar
 
 # Add a notebook command
