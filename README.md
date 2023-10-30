@@ -25,6 +25,8 @@ This is a docker compose environment to quickly get up and running with a Spark 
 **note**: If you don't have docker installed, you can head over to the [Get Docker](https://docs.docker.com/get-docker/)
 page for installation instructions.
 
+***On windows platforms change the line endings for spart/entrypoint.sh and postgres/init-db.sh into LF***
+
 ## Usage
 Start up the notebook server by running the following.
 ```
